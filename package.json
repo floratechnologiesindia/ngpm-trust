@@ -12,6 +12,8 @@
     "build": "npm run build -w apps/web",
     "start": "npm run start -w apps/web",
     "lint": "npm run lint -w apps/web",
-    "optimize-logo": "node scripts/optimize-logo.mjs"
+    "optimize-logo": "node scripts/optimize-logo.mjs",
+    "docker:dev": "docker compose -f docker-compose.dev.yml up --build",
+    "docker:prod": "docker compose -f docker-compose.prod.yml --env-file .env.production up --build -d"
   }
 }

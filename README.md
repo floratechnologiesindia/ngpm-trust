@@ -9,9 +9,23 @@ Modern mobile-first website for NGPM/SMPM with:
 
 ## Run with Docker
 
+**Development** (default `docker-compose.yml` or explicit dev file):
+
 ```bash
 docker compose up --build
+# or
+docker compose -f docker-compose.dev.yml up --build
 ```
+
+**Production** (domains: `https://ngpmandsmpm.org` site, `https://api.ngpmandsmpm.org` API):
+
+```bash
+cp .env.production.example .env.production
+# edit JWT_SECRET, ADMIN_USERNAME, ADMIN_PASSWORD
+docker compose -f docker-compose.prod.yml --env-file .env.production up --build -d
+```
+
+Put TLS termination on a reverse proxy (nginx/Caddy/Traefik) in front of `web:6660` and `api:6661`.
 
 ## Run locally
 

@@ -1,0 +1,54 @@
+# Production: optimized images, public domains (TLS terminates at your reverse proxy).
+# Website: https://ngpmandsmpm.org
+# API:     https://api.ngpmandsmpm.org
+#
+# Usage:
+#   cp .env.production.example .env.production
+#   # set JWT_SECRET, ADMIN_*, etc.
+#   docker compose -f docker-compose.prod.yml --env-file .env.production up --build -d
+#
+# Point nginx/Caddy/Traefik at web:6660 and api:6661, with SSL for the domains above.
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile.prod
+      args:
+        NEXT_PUBLIC_API_URL: https://api.ngpmandsmpm.org
+    ports:
+      - "${WEB_PUBLISH_PORT:-6660}:6660"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile.prod
+    ports:
+      - "${API_PUBLISH_PORT:-6661}:6661"
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/ngpm
+      - PORT=6661
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET}
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - CORS_ORIGIN=${CORS_ORIGIN:-https://ngpmandsmpm.org,https://www.ngpmandsmpm.org}
+    volumes:
+      - ./apps/api/uploads:/app/apps/api/uploads
+    depends_on:
+      - mongo
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongo_data_prod:/data/db
+    restart: unless-stopped
+
+volumes:
+  mongo_data_prod:

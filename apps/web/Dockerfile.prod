@@ -1,0 +1,26 @@
+# Production Next.js build. NEXT_PUBLIC_API_URL is baked in at build time.
+FROM node:20-alpine
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+COPY apps/web/package.json ./apps/web/
+RUN npm ci -w web
+
+COPY apps/web ./apps/web
+WORKDIR /app/apps/web
+
+ARG NEXT_PUBLIC_API_URL=https://api.ngpmandsmpm.org
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN npm run build
+
+# Drop devDependencies from the workspace tree to shrink image
+WORKDIR /app
+RUN npm prune --omit=dev -w web
+
+WORKDIR /app/apps/web
+ENV NODE_ENV=production
+
+EXPOSE 6660
+CMD ["npm", "run", "start"]

@@ -1,0 +1,43 @@
+# Development: hot reload, localhost API URL, Mongo exposed for debugging.
+# Usage: docker compose -f docker-compose.dev.yml up --build
+# Same stack as default docker-compose.yml
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "6660:6660"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:6661
+    depends_on:
+      - api
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    ports:
+      - "6661:6661"
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/ngpm
+      - PORT=6661
+      - JWT_SECRET=${JWT_SECRET:-change_me}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - NODE_ENV=development
+    volumes:
+      - ./apps/api/uploads:/app/apps/api/uploads
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data_dev:/data/db
+
+volumes:
+  mongo_data_dev:

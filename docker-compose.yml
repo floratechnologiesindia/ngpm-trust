@@ -1,3 +1,6 @@
+# Default: development stack (same as docker-compose.dev.yml).
+# Production: docker compose -f docker-compose.prod.yml --env-file .env.production up --build -d
+
 services:
   web:
     build:
@@ -19,9 +22,10 @@ services:
     environment:
       - MONGODB_URI=mongodb://mongo:27017/ngpm
       - PORT=6661
-      - JWT_SECRET=change_me
-      - ADMIN_USERNAME=admin
-      - ADMIN_PASSWORD=admin123
+      - JWT_SECRET=${JWT_SECRET:-change_me}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - NODE_ENV=development
     volumes:
       - ./apps/api/uploads:/app/apps/api/uploads
     depends_on:
@@ -32,7 +36,7 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - mongo_data:/data/db
+      - mongo_data_dev:/data/db
 
 volumes:
-  mongo_data:
+  mongo_data_dev:
