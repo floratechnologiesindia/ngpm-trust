@@ -44,6 +44,16 @@ npm run dev:api
 
 ## Environment
 Copy `.env.example` values to your deployment environment.
+
+## Seed admin in MongoDB (production)
+
+After production containers are up:
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env.production exec api npm run seed:admin
+```
+
+This upserts `ADMIN_USERNAME` with a bcrypt-hashed password from `ADMIN_PASSWORD`.
 # NGPM Website
 
 Dockerized full-stack project:
