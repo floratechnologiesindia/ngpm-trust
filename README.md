@@ -27,6 +27,8 @@ docker compose -f docker-compose.prod.yml --env-file .env.production up --build 
 
 Put TLS termination on a reverse proxy (nginx/Caddy/Traefik) in front of `web:6660` and `api:6661`.
 
+Example nginx: see `deploy/nginx/ngpm-production.conf`.
+
 ## Run locally
 
 ```bash
