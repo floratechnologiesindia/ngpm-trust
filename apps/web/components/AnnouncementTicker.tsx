@@ -26,7 +26,6 @@ export default function AnnouncementTicker() {
   return (
     <section className="announcement-ticker" aria-label="Pinned announcements">
       <div className="container announcement-ticker-inner">
-        <strong className="announcement-ticker-label">Pinned Announcements</strong>
         <div className="announcement-ticker-marquee">
           <div className="announcement-ticker-track-wrap">
             <p className="announcement-ticker-track">{text}</p>

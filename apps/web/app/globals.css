@@ -338,23 +338,15 @@ a {
 }
 
 .announcement-ticker-inner {
-  display: grid;
-  gap: 0.4rem;
+  display: flex;
+  align-items: center;
   padding-top: 0.5rem;
   padding-bottom: 0.55rem;
 }
 
-.announcement-ticker-label {
-  width: fit-content;
-  font-size: 0.78rem;
-  background: rgba(255, 255, 255, 0.16);
-  border-radius: 999px;
-  padding: 0.18rem 0.6rem;
-  letter-spacing: 0.02em;
-}
-
 .announcement-ticker-marquee {
   overflow: hidden;
+  width: 100%;
 }
 
 .announcement-ticker-track-wrap {
@@ -481,6 +473,12 @@ a {
 
 .mission-content-block p {
   margin-top: 0;
+  line-height: 1.65;
+}
+
+.country-mission-content p {
+  margin-top: 0;
+  margin-bottom: 0.8rem;
   line-height: 1.65;
 }
 

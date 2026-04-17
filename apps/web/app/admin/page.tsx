@@ -74,6 +74,7 @@ export default function AdminPage() {
   const [description, setDescription] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [sermonMetaLoading, setSermonMetaLoading] = useState(false);
   const [magazineMonth, setMagazineMonth] = useState("");
   const [announcementPinned, setAnnouncementPinned] = useState(false);
   const [pdfUrl, setPdfUrl] = useState("");
@@ -109,6 +110,30 @@ export default function AdminPage() {
   );
 
   const showImageTools = activeTab === "gallery" || activeTab === "events" || activeTab === "magazines";
+
+  useEffect(() => {
+    if (activeTab !== "sermons") return;
+    const value = youtubeUrl.trim();
+    if (!value) return;
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        setSermonMetaLoading(true);
+        const endpoint = `https://www.youtube.com/oembed?url=${encodeURIComponent(value)}&format=json`;
+        const response = await fetch(endpoint);
+        if (!response.ok) return;
+        const data = (await response.json()) as { title?: string; author_name?: string };
+        if (data.title) setTitle(data.title);
+        if (data.author_name) setDescription(`YouTube Channel: ${data.author_name}`);
+      } catch {
+        // Keep manual editing flow if metadata request fails.
+      } finally {
+        setSermonMetaLoading(false);
+      }
+    }, 700);
+
+    return () => clearTimeout(timeoutId);
+  }, [activeTab, youtubeUrl]);
 
   useEffect(() => {
     const localToken = localStorage.getItem("admin_token");
@@ -478,15 +503,34 @@ export default function AdminPage() {
 
         <section className="card">
           <h2 style={{ marginTop: 0 }}>{editingId ? `Edit ${formHeading}` : `Create ${formHeading}`}</h2>
-          <div className="grid grid-2">
-            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" />
-            {activeTab === "events" ? (
-              <input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
-            ) : null}
-            {activeTab === "magazines" ? (
-              <input type="month" value={magazineMonth} onChange={(e) => setMagazineMonth(e.target.value)} />
-            ) : null}
-          </div>
+          {activeTab === "sermons" ? (
+            <>
+              <input
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                placeholder="YouTube URL (watch, youtu.be, embed, or shorts)"
+                style={{ width: "100%", padding: "0.65rem", borderRadius: 10, border: "1px solid #cbd5e1" }}
+              />
+              <p className="muted" style={{ margin: "0.45rem 0 0", fontSize: "0.86rem" }}>
+                {sermonMetaLoading
+                  ? "Fetching title and description from YouTube..."
+                  : "Title and description are auto-filled from YouTube and can be edited."}
+              </p>
+              <div className="grid grid-2" style={{ marginTop: "0.75rem" }}>
+                <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" />
+              </div>
+            </>
+          ) : (
+            <div className="grid grid-2">
+              <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" />
+              {activeTab === "events" ? (
+                <input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
+              ) : null}
+              {activeTab === "magazines" ? (
+                <input type="month" value={magazineMonth} onChange={(e) => setMagazineMonth(e.target.value)} />
+              ) : null}
+            </div>
+          )}
           {activeTab === "events" || activeTab === "sermons" || activeTab === "magazines" ? (
             <textarea
               value={description}
@@ -514,14 +558,6 @@ export default function AdminPage() {
                 Pin this announcement
               </label>
             </>
-          ) : null}
-          {activeTab === "sermons" ? (
-            <input
-              value={youtubeUrl}
-              onChange={(e) => setYoutubeUrl(e.target.value)}
-              placeholder="YouTube URL (watch, youtu.be, embed, or shorts)"
-              style={{ marginTop: "0.75rem", width: "100%", padding: "0.65rem", borderRadius: 10, border: "1px solid #cbd5e1" }}
-            />
           ) : null}
           {activeTab === "sermons" && sermonPreview ? (
             <div style={{ marginTop: "0.75rem", borderRadius: 12, overflow: "hidden", aspectRatio: "16/9", maxWidth: 480 }}>

@@ -10,6 +10,7 @@ const navItems = [
   { href: "/about", label: "About" },
   { href: "/office-bearers", label: "Office Bearers" },
   { href: "/events", label: "Events & Announcements" },
+  { href: "/other-countries-missionaries", label: "Other Countries Missionaries" },
   { href: "/sermons", label: "Sermons" },
   { href: "/magazines", label: "Magazines" },
   { href: "/gallery", label: "Gallery" },
