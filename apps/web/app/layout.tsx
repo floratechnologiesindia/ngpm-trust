@@ -1,7 +1,6 @@
 import "./globals.css";
-import Link from "next/link";
-import Image from "next/image";
 import AnnouncementTicker from "../components/AnnouncementTicker";
+import SiteHeader from "../components/SiteHeader";
 
 export const metadata = {
   title: "NGPM Trust | Transformation of India",
@@ -14,56 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <header className="site-header">
-          <section className="container nav-top-row">
-            <Link className="nav-logo-badge" href="/">
-              <div className="nav-logo-circle">
-                <Image
-                  src="/images/logo.webp"
-                  alt="NGPM Logo"
-                  width={88}
-                  height={88}
-                  priority
-                  sizes="(max-width: 767px) 56px, 88px"
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-              </div>
-            </Link>
-            <Link href="/" className="nav-brand-title">
-              <span className="nav-brand-line">
-                Nehemiah New Generation Partakers Movement Trust, NGPM
-              </span>
-              <span className="nav-brand-line nav-brand-line-secondary">
-                Salvation Mission Partaker Movement, SMPM
-              </span>
-            </Link>
-
-            <details className="mobile-menu">
-              <summary>Menu</summary>
-              <div className="mobile-menu-links">
-                <Link href="/">Home</Link>
-                <Link href="/about">About</Link>
-                <Link href="/office-bearers">Office Bearers</Link>
-                <Link href="/events">Events & Announcements</Link>
-                <Link href="/sermons">Sermons</Link>
-                <Link href="/magazines">Magazines</Link>
-                <Link href="/gallery">Gallery</Link>
-                <Link href="/contact">Contact</Link>
-              </div>
-            </details>
-          </section>
-
-          <nav className="container desktop-menu-links">
-              <Link href="/">Home</Link>
-              <Link href="/about">About</Link>
-              <Link href="/office-bearers">Office Bearers</Link>
-              <Link href="/events">Events & Announcements</Link>
-              <Link href="/sermons">Sermons</Link>
-              <Link href="/magazines">Magazines</Link>
-              <Link href="/gallery">Gallery</Link>
-              <Link href="/contact">Contact</Link>
-          </nav>
-        </header>
+        <SiteHeader />
         <AnnouncementTicker />
         <main className="container">{children}</main>
         <footer className="section" style={{ background: "#0f172a", marginTop: "2rem" }}>

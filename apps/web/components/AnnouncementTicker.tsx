@@ -20,18 +20,20 @@ export default function AnnouncementTicker() {
       .catch(() => setItems([]));
   }, []);
 
-  const text = useMemo(() => items.map((x) => x.title).join("   •   "), [items]);
+  const text = useMemo(() => items.map((x) => x.title).join("          ✦          "), [items]);
   if (!text) return null;
 
   return (
     <section className="announcement-ticker" aria-label="Pinned announcements">
       <div className="container announcement-ticker-inner">
-        <strong className="announcement-ticker-label">Announcements</strong>
-        <div className="announcement-ticker-track-wrap">
-          <p className="announcement-ticker-track">{text}</p>
-          <p className="announcement-ticker-track" aria-hidden>
-            {text}
-          </p>
+        <strong className="announcement-ticker-label">Pinned Announcements</strong>
+        <div className="announcement-ticker-marquee">
+          <div className="announcement-ticker-track-wrap">
+            <p className="announcement-ticker-track">{text}</p>
+            <p className="announcement-ticker-track" aria-hidden>
+              {text}
+            </p>
+          </div>
         </div>
       </div>
     </section>
