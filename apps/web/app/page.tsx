@@ -13,6 +13,9 @@ const highlights = [
 
 export default function HomePage() {
   const [showFullMission, setShowFullMission] = useState(false);
+  const [galleryItems, setGalleryItems] = useState<
+    { _id: string; title: string; imageUrl: string }[]
+  >([]);
   const slides = [
     "/images/home-carousel/ngpm-1.jpg",
     "/images/home-carousel/ngpm-2.jpg",
@@ -20,6 +23,13 @@ export default function HomePage() {
     "/images/home-carousel/ngpm-4.jpg"
   ];
   const [activeSlide, setActiveSlide] = useState(0);
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6661";
+
+  const resolveImageUrl = (url?: string) => {
+    if (!url) return "";
+    if (url.startsWith("http://") || url.startsWith("https://")) return url;
+    return `${apiBase}${url.startsWith("/") ? "" : "/"}${url}`;
+  };
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -27,6 +37,13 @@ export default function HomePage() {
     }, 4500);
     return () => clearInterval(id);
   }, [slides.length]);
+
+  useEffect(() => {
+    fetch(`${apiBase}/api/gallery`)
+      .then((r) => r.json())
+      .then((data) => setGalleryItems(Array.isArray(data) ? data : []))
+      .catch(() => setGalleryItems([]));
+  }, [apiBase]);
 
   return (
     <div className="section">
@@ -224,6 +241,36 @@ export default function HomePage() {
         >
           {showFullMission ? "Show less" : "Read more"}
         </button>
+      </section>
+
+      <section className="section" style={{ paddingBottom: "1rem" }}>
+        <article className="card" style={{ marginBottom: "1rem" }}>
+          <h2 style={{ marginTop: 0 }}>Gallery</h2>
+          <p className="muted" style={{ marginBottom: 0 }}>
+            Moments from ministry, outreach, prayer gatherings, and community transformation.
+          </p>
+        </article>
+        <div className="masonry">
+          {galleryItems.map((item, index) => (
+            <article className="card masonry-item" key={item._id}>
+              <img
+                src={resolveImageUrl(item.imageUrl)}
+                alt={item.title || `NGPM gallery image ${index + 1}`}
+                style={{ width: "100%", borderRadius: 12 }}
+              />
+              {item.title ? (
+                <p className="muted" style={{ marginBottom: 0 }}>
+                  {item.title}
+                </p>
+              ) : null}
+            </article>
+          ))}
+          {galleryItems.length === 0 ? (
+            <article className="card masonry-item">
+              <p className="muted">No gallery images found yet. Add them from admin dashboard.</p>
+            </article>
+          ) : null}
+        </div>
       </section>
 
       <section className="cta-band">
