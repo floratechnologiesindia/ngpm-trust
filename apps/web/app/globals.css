@@ -136,7 +136,7 @@ a {
 .nav-shell {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 0.5rem;
+  gap: 0.5rem 0.65rem;
   align-items: center;
   min-height: 72px;
   padding-top: 0.4rem;
@@ -166,12 +166,27 @@ a {
 }
 
 .nav-brand-title {
-  font-weight: 800;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.12rem;
+  font-weight: 700;
   color: #115e59;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 0.98rem;
+  line-height: 1.22;
+  font-size: 0.72rem;
+  min-width: 0;
+}
+
+.nav-brand-line {
+  display: block;
+  max-width: 100%;
+}
+
+.nav-brand-line-secondary {
+  font-weight: 600;
+  color: #0f766e;
+  font-size: 0.68rem;
 }
 
 .desktop-menu-links {
@@ -241,7 +256,12 @@ a {
   }
 
   .nav-brand-title {
-    font-size: 1rem;
+    font-size: 0.82rem;
+    gap: 0.15rem;
+  }
+
+  .nav-brand-line-secondary {
+    font-size: 0.78rem;
   }
 
   .mobile-menu {
@@ -252,7 +272,10 @@ a {
     margin-left: auto;
     display: inline-flex;
     align-items: center;
-    gap: 0.9rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.65rem 0.9rem;
+    max-width: min(100%, 520px);
   }
 }
 

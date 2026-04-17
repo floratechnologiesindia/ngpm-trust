@@ -3,9 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import Cropper from "react-easy-crop";
 import { useRouter } from "next/navigation";
+import { youtubeEmbedSrc } from "../../lib/youtube";
 
 type Area = { x: number; y: number; width: number; height: number };
 type Point = { x: number; y: number };
+
+type Tab = "gallery" | "events" | "sermons" | "magazines";
 
 type GalleryItem = { _id: string; title: string; imageUrl: string; order: number };
 type EventItem = {
@@ -17,6 +20,16 @@ type EventItem = {
   imageUrl?: string;
   order: number;
 };
+type SermonItem = { _id: string; title: string; description: string; youtubeUrl: string; order: number };
+type MagazineItem = {
+  _id: string;
+  title: string;
+  description: string;
+  month: string;
+  thumbnailUrl: string;
+  pdfUrl: string;
+  order: number;
+};
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6661";
 
@@ -26,18 +39,36 @@ const resolveImageUrl = (url?: string) => {
   return `${apiBase}${url.startsWith("/") ? "" : "/"}${url}`;
 };
 
+const tabBtn = (active: boolean) =>
+  ({
+    border: 0,
+    textAlign: "left" as const,
+    padding: "0.65rem 0.85rem",
+    borderRadius: 10,
+    fontWeight: 700,
+    cursor: "pointer",
+    background: active ? "var(--primary)" : "#f1f5f9",
+    color: active ? "#ffffff" : "var(--text)"
+  }) satisfies React.CSSProperties;
+
 export default function AdminPage() {
   const router = useRouter();
   const [token, setToken] = useState("");
-  const [activeTab, setActiveTab] = useState<"gallery" | "events">("gallery");
+  const [activeTab, setActiveTab] = useState<Tab>("gallery");
 
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
   const [events, setEvents] = useState<EventItem[]>([]);
+  const [sermons, setSermons] = useState<SermonItem[]>([]);
+  const [magazines, setMagazines] = useState<MagazineItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [eventDate, setEventDate] = useState("");
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [magazineMonth, setMagazineMonth] = useState("");
+  const [pdfUrl, setPdfUrl] = useState("");
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -45,15 +76,24 @@ export default function AdminPage() {
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [zoom, setZoom] = useState(1);
+
   const [galleryPage, setGalleryPage] = useState(1);
   const [eventsPage, setEventsPage] = useState(1);
+  const [sermonsPage, setSermonsPage] = useState(1);
+  const [magazinesPage, setMagazinesPage] = useState(1);
   const pageSize = 5;
 
   const previewUrl = useMemo(() => (imageFile ? URL.createObjectURL(imageFile) : ""), [imageFile]);
   const totalGalleryPages = Math.max(1, Math.ceil(gallery.length / pageSize));
   const totalEventsPages = Math.max(1, Math.ceil(events.length / pageSize));
+  const totalSermonsPages = Math.max(1, Math.ceil(sermons.length / pageSize));
+  const totalMagazinesPages = Math.max(1, Math.ceil(magazines.length / pageSize));
   const pagedGallery = gallery.slice((galleryPage - 1) * pageSize, galleryPage * pageSize);
   const pagedEvents = events.slice((eventsPage - 1) * pageSize, eventsPage * pageSize);
+  const pagedSermons = sermons.slice((sermonsPage - 1) * pageSize, sermonsPage * pageSize);
+  const pagedMagazines = magazines.slice((magazinesPage - 1) * pageSize, magazinesPage * pageSize);
+
+  const showImageTools = activeTab === "gallery" || activeTab === "events" || activeTab === "magazines";
 
   useEffect(() => {
     const localToken = localStorage.getItem("admin_token");
@@ -63,7 +103,7 @@ export default function AdminPage() {
     }
     setToken(localToken);
     loadData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   useEffect(() => {
@@ -80,6 +120,14 @@ export default function AdminPage() {
     if (eventsPage > totalEventsPages) setEventsPage(totalEventsPages);
   }, [eventsPage, totalEventsPages]);
 
+  useEffect(() => {
+    if (sermonsPage > totalSermonsPages) setSermonsPage(totalSermonsPages);
+  }, [sermonsPage, totalSermonsPages]);
+
+  useEffect(() => {
+    if (magazinesPage > totalMagazinesPages) setMagazinesPage(totalMagazinesPages);
+  }, [magazinesPage, totalMagazinesPages]);
+
   const authHeaders = (t = token) => ({
     Authorization: `Bearer ${t}`
   });
@@ -87,13 +135,22 @@ export default function AdminPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [galleryRes, eventRes] = await Promise.all([
+      const [galleryRes, eventRes, sermonRes, magRes] = await Promise.all([
         fetch(`${apiBase}/api/gallery`, { cache: "no-store" }),
-        fetch(`${apiBase}/api/events`, { cache: "no-store" })
+        fetch(`${apiBase}/api/events`, { cache: "no-store" }),
+        fetch(`${apiBase}/api/sermons`, { cache: "no-store" }),
+        fetch(`${apiBase}/api/magazines`, { cache: "no-store" })
       ]);
-      const [galleryData, eventData] = await Promise.all([galleryRes.json(), eventRes.json()]);
-      setGallery(galleryData);
-      setEvents(eventData);
+      const [galleryData, eventData, sermonData, magData] = await Promise.all([
+        galleryRes.json(),
+        eventRes.json(),
+        sermonRes.json(),
+        magRes.json()
+      ]);
+      setGallery(Array.isArray(galleryData) ? galleryData : []);
+      setEvents(Array.isArray(eventData) ? eventData : []);
+      setSermons(Array.isArray(sermonData) ? sermonData : []);
+      setMagazines(Array.isArray(magData) ? magData : []);
     } finally {
       setLoading(false);
     }
@@ -141,13 +198,34 @@ export default function AdminPage() {
     });
     if (!res.ok) throw new Error("Upload failed");
     const data = await res.json();
-    return data.imageUrl;
+    return data.imageUrl as string;
+  };
+
+  const uploadPdfToServer = async (file: File) => {
+    if (!token) throw new Error("Missing admin token");
+    const form = new FormData();
+    form.append("pdf", file);
+    const res = await fetch(`${apiBase}/api/upload/pdf`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: form
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error((err as { message?: string }).message || "PDF upload failed");
+    }
+    const data = await res.json();
+    return data.pdfUrl as string;
   };
 
   const resetForm = () => {
     setTitle("");
     setDescription("");
     setEventDate("");
+    setYoutubeUrl("");
+    setMagazineMonth("");
+    setPdfUrl("");
+    setPdfFile(null);
     setEditingId(null);
     setImageFile(null);
     setImageUrl("");
@@ -158,38 +236,88 @@ export default function AdminPage() {
 
   const saveCurrent = async () => {
     if (!token || !title.trim()) return;
-    const uploadedImageUrl = await uploadImage();
 
-    if (activeTab === "gallery") {
-      const payload = { title, imageUrl: uploadedImageUrl };
-      const url = editingId ? `${apiBase}/api/gallery/${editingId}` : `${apiBase}/api/gallery`;
-      const method = editingId ? "PUT" : "POST";
-      await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json", ...authHeaders() },
-        body: JSON.stringify(payload)
-      });
-    } else {
-      const payload = {
-        title,
-        description,
-        date: eventDate || new Date().toISOString(),
-        imageUrls: uploadedImageUrl ? [uploadedImageUrl] : []
-      };
-      const url = editingId ? `${apiBase}/api/events/${editingId}` : `${apiBase}/api/events`;
-      const method = editingId ? "PUT" : "POST";
-      await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json", ...authHeaders() },
-        body: JSON.stringify(payload)
-      });
+    try {
+      if (activeTab === "gallery") {
+        const uploadedImageUrl = await uploadImage();
+        const payload = { title, imageUrl: uploadedImageUrl };
+        const url = editingId ? `${apiBase}/api/gallery/${editingId}` : `${apiBase}/api/gallery`;
+        const method = editingId ? "PUT" : "POST";
+        await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json", ...authHeaders() },
+          body: JSON.stringify(payload)
+        });
+      } else if (activeTab === "events") {
+        const uploadedImageUrl = await uploadImage();
+        const payload = {
+          title,
+          description,
+          date: eventDate || new Date().toISOString(),
+          imageUrls: uploadedImageUrl ? [uploadedImageUrl] : []
+        };
+        const url = editingId ? `${apiBase}/api/events/${editingId}` : `${apiBase}/api/events`;
+        const method = editingId ? "PUT" : "POST";
+        await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json", ...authHeaders() },
+          body: JSON.stringify(payload)
+        });
+      } else if (activeTab === "sermons") {
+        if (!youtubeUrl.trim()) {
+          window.alert("YouTube URL is required.");
+          return;
+        }
+        const payload = { title, description, youtubeUrl: youtubeUrl.trim() };
+        const url = editingId ? `${apiBase}/api/sermons/${editingId}` : `${apiBase}/api/sermons`;
+        const method = editingId ? "PUT" : "POST";
+        await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json", ...authHeaders() },
+          body: JSON.stringify(payload)
+        });
+      } else {
+        if (!magazineMonth.trim()) {
+          window.alert("Month is required.");
+          return;
+        }
+        const thumb = imageFile ? await uploadImage() : imageUrl;
+        const pdf = pdfFile ? await uploadPdfToServer(pdfFile) : pdfUrl;
+        if (!thumb || !pdf) {
+          window.alert("Thumbnail image and PDF are both required.");
+          return;
+        }
+        const payload = {
+          title,
+          description,
+          month: magazineMonth.trim(),
+          thumbnailUrl: thumb,
+          pdfUrl: pdf
+        };
+        const url = editingId ? `${apiBase}/api/magazines/${editingId}` : `${apiBase}/api/magazines`;
+        const method = editingId ? "PUT" : "POST";
+        await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json", ...authHeaders() },
+          body: JSON.stringify(payload)
+        });
+      }
+      resetForm();
+      await loadData();
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Save failed");
     }
-    resetForm();
-    await loadData();
+  };
+
+  const apiRouteForTab = (tab: Tab) => {
+    if (tab === "gallery") return "gallery";
+    if (tab === "events") return "events";
+    if (tab === "sermons") return "sermons";
+    return "magazines";
   };
 
   const deleteItem = async (id: string) => {
-    const route = activeTab === "gallery" ? "gallery" : "events";
+    const route = apiRouteForTab(activeTab);
     await fetch(`${apiBase}/api/${route}/${id}`, { method: "DELETE", headers: authHeaders() });
     await loadData();
   };
@@ -198,7 +326,7 @@ export default function AdminPage() {
     if (index === 0) return;
     const next = [...items];
     [next[index - 1], next[index]] = [next[index], next[index - 1]];
-    const route = activeTab === "gallery" ? "gallery" : "events";
+    const route = apiRouteForTab(activeTab);
     await fetch(`${apiBase}/api/${route}/reorder`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders() },
@@ -225,217 +353,465 @@ export default function AdminPage() {
     setImageFile(null);
   };
 
+  const onEditSermon = (item: SermonItem) => {
+    setActiveTab("sermons");
+    setEditingId(item._id);
+    setTitle(item.title);
+    setDescription(item.description);
+    setYoutubeUrl(item.youtubeUrl);
+  };
+
+  const onEditMagazine = (item: MagazineItem) => {
+    setActiveTab("magazines");
+    setEditingId(item._id);
+    setTitle(item.title);
+    setDescription(item.description);
+    setMagazineMonth(item.month);
+    setImageUrl(item.thumbnailUrl);
+    setPdfUrl(item.pdfUrl);
+    setImageFile(null);
+    setPdfFile(null);
+  };
+
   const logout = () => {
     localStorage.removeItem("admin_token");
     router.push("/admin/login");
   };
 
-  return (
-    <div className="grid" style={{ gap: "1rem" }}>
-      <section className="card">
-        <h1>Admin Panel</h1>
-        <p className="muted">
-          Add, edit, delete, reorder gallery and events. Image upload supports crop, zoom and
-          server optimization.
-        </p>
-        <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
-          <button className="btn" onClick={() => setActiveTab("gallery")} style={{ border: 0 }}>
-            Gallery
-          </button>
-          <button className="btn secondary" onClick={() => setActiveTab("events")} style={{ border: 0 }}>
-            Events
-          </button>
-          <button className="btn secondary" onClick={logout} style={{ border: 0, marginLeft: "auto" }}>
-            Logout
-          </button>
-        </div>
-      </section>
+  const formHeading =
+    activeTab === "gallery"
+      ? "Gallery image"
+      : activeTab === "events"
+        ? "Event"
+        : activeTab === "sermons"
+          ? "Sermon"
+          : "Magazine";
 
-      <section className="card">
-        <h2>{editingId ? "Edit Item" : `Create ${activeTab === "gallery" ? "Gallery Image" : "Event"}`}</h2>
-        <div className="grid grid-2">
-          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" />
-          {activeTab === "events" ? (
-            <input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
+  const sermonPreview = youtubeEmbedSrc(youtubeUrl);
+
+  return (
+    <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "flex-start" }}>
+      <nav className="card" style={{ width: "100%", maxWidth: 220, padding: "1rem", display: "grid", gap: "0.45rem" }}>
+        <p style={{ margin: "0 0 0.35rem", fontWeight: 800, fontSize: "0.95rem" }}>Content</p>
+        <button type="button" style={tabBtn(activeTab === "gallery")} onClick={() => setActiveTab("gallery")}>
+          Gallery
+        </button>
+        <button type="button" style={tabBtn(activeTab === "events")} onClick={() => setActiveTab("events")}>
+          Events
+        </button>
+        <button type="button" style={tabBtn(activeTab === "sermons")} onClick={() => setActiveTab("sermons")}>
+          Sermons
+        </button>
+        <button type="button" style={tabBtn(activeTab === "magazines")} onClick={() => setActiveTab("magazines")}>
+          Magazines
+        </button>
+        <button
+          type="button"
+          className="btn secondary"
+          onClick={logout}
+          style={{ border: 0, marginTop: "0.5rem" }}
+        >
+          Logout
+        </button>
+      </nav>
+
+      <div style={{ flex: "1 1 360px", minWidth: 0, display: "grid", gap: "1rem" }}>
+        <section className="card">
+          <h1 style={{ marginTop: 0 }}>Admin Panel</h1>
+          <p className="muted">
+            Manage gallery, events, sermons (YouTube), and magazines (PDF + cover). Images support
+            crop and optimization; PDFs up to 25&nbsp;MB.
+          </p>
+        </section>
+
+        <section className="card">
+          <h2 style={{ marginTop: 0 }}>{editingId ? `Edit ${formHeading}` : `Create ${formHeading}`}</h2>
+          <div className="grid grid-2">
+            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" />
+            {activeTab === "events" ? (
+              <input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
+            ) : null}
+            {activeTab === "magazines" ? (
+              <input type="month" value={magazineMonth} onChange={(e) => setMagazineMonth(e.target.value)} />
+            ) : null}
+          </div>
+          {activeTab === "events" || activeTab === "sermons" || activeTab === "magazines" ? (
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder={activeTab === "sermons" ? "Description (optional)" : "Description"}
+              rows={4}
+              style={{ marginTop: "0.75rem", width: "100%" }}
+            />
           ) : null}
-        </div>
-        {activeTab === "events" ? (
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Event description"
-            rows={4}
-            style={{ marginTop: "0.75rem", width: "100%" }}
-          />
-        ) : null}
-        <div style={{ marginTop: "0.75rem" }}>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-          />
-        </div>
-        {previewUrl ? (
-          <>
-            <div style={{ position: "relative", height: 260, marginTop: "0.75rem", borderRadius: 12, overflow: "hidden" }}>
-              <Cropper
-                image={previewUrl}
-                crop={crop}
-                zoom={zoom}
-                onCropChange={setCrop}
-                onCropComplete={(_, areaPixels) => setCroppedAreaPixels(areaPixels)}
-                onZoomChange={setZoom}
-                aspect={16 / 9}
+          {activeTab === "sermons" ? (
+            <input
+              value={youtubeUrl}
+              onChange={(e) => setYoutubeUrl(e.target.value)}
+              placeholder="YouTube URL (watch, youtu.be, embed, or shorts)"
+              style={{ marginTop: "0.75rem", width: "100%", padding: "0.65rem", borderRadius: 10, border: "1px solid #cbd5e1" }}
+            />
+          ) : null}
+          {activeTab === "sermons" && sermonPreview ? (
+            <div style={{ marginTop: "0.75rem", borderRadius: 12, overflow: "hidden", aspectRatio: "16/9", maxWidth: 480 }}>
+              <iframe
+                title="Preview"
+                src={sermonPreview}
+                style={{ width: "100%", height: "100%", border: 0 }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               />
             </div>
-            <label style={{ display: "block", marginTop: "0.5rem" }}>
-              Zoom
-              <input
-                type="range"
-                min={1}
-                max={3}
-                step={0.1}
-                value={zoom}
-                onChange={(e) => setZoom(Number(e.target.value))}
-                style={{ width: "100%" }}
-              />
-            </label>
-          </>
-        ) : null}
-        <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem" }}>
-          <button className="btn" onClick={saveCurrent} style={{ border: 0 }}>
-            {editingId ? "Update" : "Create"}
-          </button>
-          <button className="btn secondary" onClick={resetForm} style={{ border: 0 }}>
-            Reset
-          </button>
-        </div>
-      </section>
+          ) : null}
+          {showImageTools ? (
+            <div style={{ marginTop: "0.75rem" }}>
+              <label className="muted" style={{ display: "block", marginBottom: "0.35rem" }}>
+                {activeTab === "magazines" ? "Cover thumbnail" : "Image"}
+              </label>
+              <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
+            </div>
+          ) : null}
+          {activeTab === "magazines" ? (
+            <div style={{ marginTop: "0.75rem" }}>
+              <label className="muted" style={{ display: "block", marginBottom: "0.35rem" }}>
+                PDF file
+              </label>
+              <input type="file" accept="application/pdf" onChange={(e) => setPdfFile(e.target.files?.[0] || null)} />
+              {pdfUrl && !pdfFile ? (
+                <p className="muted" style={{ marginTop: "0.35rem", fontSize: "0.85rem", marginBottom: 0 }}>
+                  Current PDF:{" "}
+                  <a href={resolveImageUrl(pdfUrl)} target="_blank" rel="noreferrer">
+                    open
+                  </a>
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+          {showImageTools && previewUrl ? (
+            <>
+              <div
+                style={{
+                  position: "relative",
+                  height: 260,
+                  marginTop: "0.75rem",
+                  borderRadius: 12,
+                  overflow: "hidden"
+                }}
+              >
+                <Cropper
+                  image={previewUrl}
+                  crop={crop}
+                  zoom={zoom}
+                  onCropChange={setCrop}
+                  onCropComplete={(_, areaPixels) => setCroppedAreaPixels(areaPixels)}
+                  onZoomChange={setZoom}
+                  aspect={activeTab === "magazines" ? 3 / 4 : 16 / 9}
+                />
+              </div>
+              <label style={{ display: "block", marginTop: "0.5rem" }}>
+                Zoom
+                <input
+                  type="range"
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  value={zoom}
+                  onChange={(e) => setZoom(Number(e.target.value))}
+                  style={{ width: "100%" }}
+                />
+              </label>
+            </>
+          ) : null}
+          <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem", flexWrap: "wrap" }}>
+            <button className="btn" type="button" onClick={saveCurrent} style={{ border: 0 }}>
+              {editingId ? "Update" : "Create"}
+            </button>
+            <button className="btn secondary" type="button" onClick={resetForm} style={{ border: 0 }}>
+              Reset
+            </button>
+          </div>
+        </section>
 
-      <section className="card">
-        <h2>{activeTab === "gallery" ? "Gallery Items" : "Event Items"}</h2>
-        {loading ? <p className="muted">Loading...</p> : null}
-        <div style={{ marginTop: "1rem", overflowX: "auto" }}>
-          {activeTab === "gallery" ? (
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr>
-                  <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Image</th>
-                  <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Title</th>
-                  <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pagedGallery.map((item) => {
-                  const originalIndex = gallery.findIndex((g) => g._id === item._id);
-                  return (
-                    <tr key={item._id}>
-                      <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9" }}>
-                        {item.imageUrl ? (
+        <section className="card">
+          <h2 style={{ marginTop: 0 }}>
+            {activeTab === "gallery"
+              ? "Gallery items"
+              : activeTab === "events"
+                ? "Events"
+                : activeTab === "sermons"
+                  ? "Sermons"
+                  : "Magazines"}
+          </h2>
+          {loading ? <p className="muted">Loading...</p> : null}
+          <div style={{ marginTop: "1rem", overflowX: "auto" }}>
+            {activeTab === "gallery" ? (
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Image</th>
+                    <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Title</th>
+                    <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pagedGallery.map((item) => {
+                    const originalIndex = gallery.findIndex((g) => g._id === item._id);
+                    return (
+                      <tr key={item._id}>
+                        <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9" }}>
+                          {item.imageUrl ? (
+                            <img
+                              src={resolveImageUrl(item.imageUrl)}
+                              alt={item.title}
+                              style={{ width: 90, height: 60, objectFit: "cover", borderRadius: 8 }}
+                            />
+                          ) : (
+                            <span className="muted">No image</span>
+                          )}
+                        </td>
+                        <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9" }}>{item.title}</td>
+                        <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9" }}>
+                          <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                            <button type="button" onClick={() => onEditGallery(item)}>
+                              Edit
+                            </button>
+                            <button type="button" onClick={() => reorder(gallery, originalIndex)}>
+                              Up
+                            </button>
+                            <button type="button" onClick={() => deleteItem(item._id)}>
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            ) : null}
+
+            {activeTab === "events" ? (
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Image</th>
+                    <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Title</th>
+                    <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Date</th>
+                    <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Description</th>
+                    <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pagedEvents.map((item) => {
+                    const originalIndex = events.findIndex((e) => e._id === item._id);
+                    return (
+                      <tr key={item._id}>
+                        <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9" }}>
+                          {item.imageUrls?.[0] || item.imageUrl ? (
+                            <img
+                              src={resolveImageUrl(item.imageUrls?.[0] || item.imageUrl)}
+                              alt={item.title}
+                              style={{ width: 90, height: 60, objectFit: "cover", borderRadius: 8 }}
+                            />
+                          ) : (
+                            <span className="muted">No image</span>
+                          )}
+                        </td>
+                        <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9" }}>{item.title}</td>
+                        <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9" }}>
+                          {new Date(item.date).toLocaleDateString()}
+                        </td>
+                        <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9", maxWidth: 300 }}>
+                          <span className="muted">{item.description}</span>
+                        </td>
+                        <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9" }}>
+                          <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                            <button type="button" onClick={() => onEditEvent(item)}>
+                              Edit
+                            </button>
+                            <button type="button" onClick={() => reorder(events, originalIndex)}>
+                              Up
+                            </button>
+                            <button type="button" onClick={() => deleteItem(item._id)}>
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            ) : null}
+
+            {activeTab === "sermons" ? (
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Title</th>
+                    <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>YouTube</th>
+                    <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Description</th>
+                    <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pagedSermons.map((item) => {
+                    const originalIndex = sermons.findIndex((s) => s._id === item._id);
+                    return (
+                      <tr key={item._id}>
+                        <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9" }}>{item.title}</td>
+                        <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9", maxWidth: 220 }}>
+                          <a href={item.youtubeUrl} target="_blank" rel="noreferrer" className="muted">
+                            link
+                          </a>
+                        </td>
+                        <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9", maxWidth: 280 }}>
+                          <span className="muted">{item.description}</span>
+                        </td>
+                        <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9" }}>
+                          <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                            <button type="button" onClick={() => onEditSermon(item)}>
+                              Edit
+                            </button>
+                            <button type="button" onClick={() => reorder(sermons, originalIndex)}>
+                              Up
+                            </button>
+                            <button type="button" onClick={() => deleteItem(item._id)}>
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            ) : null}
+
+            {activeTab === "magazines" ? (
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Cover</th>
+                    <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Title</th>
+                    <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Month</th>
+                    <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Description</th>
+                    <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pagedMagazines.map((item) => {
+                    const originalIndex = magazines.findIndex((m) => m._id === item._id);
+                    return (
+                      <tr key={item._id}>
+                        <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9" }}>
                           <img
-                            src={resolveImageUrl(item.imageUrl)}
+                            src={resolveImageUrl(item.thumbnailUrl)}
                             alt={item.title}
-                            style={{ width: 90, height: 60, objectFit: "cover", borderRadius: 8 }}
+                            style={{ width: 56, height: 72, objectFit: "cover", borderRadius: 8 }}
                           />
-                        ) : (
-                          <span className="muted">No image</span>
-                        )}
-                      </td>
-                      <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9" }}>{item.title}</td>
-                      <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9" }}>
-                        <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
-                          <button onClick={() => onEditGallery(item)}>Edit</button>
-                          <button onClick={() => reorder(gallery, originalIndex)}>Up</button>
-                          <button onClick={() => deleteItem(item._id)}>Delete</button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          ) : (
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr>
-                  <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Image</th>
-                  <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Title</th>
-                  <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Date</th>
-                  <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Description</th>
-                  <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pagedEvents.map((item) => {
-                  const originalIndex = events.findIndex((e) => e._id === item._id);
-                  return (
-                    <tr key={item._id}>
-                      <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9" }}>
-                        {(item.imageUrls?.[0] || item.imageUrl) ? (
-                          <img
-                            src={resolveImageUrl(item.imageUrls?.[0] || item.imageUrl)}
-                            alt={item.title}
-                            style={{ width: 90, height: 60, objectFit: "cover", borderRadius: 8 }}
-                          />
-                        ) : (
-                          <span className="muted">No image</span>
-                        )}
-                      </td>
-                      <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9" }}>{item.title}</td>
-                      <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9" }}>
-                        {new Date(item.date).toLocaleDateString()}
-                      </td>
-                      <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9", maxWidth: 300 }}>
-                        <span className="muted">{item.description}</span>
-                      </td>
-                      <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9" }}>
-                        <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
-                          <button onClick={() => onEditEvent(item)}>Edit</button>
-                          <button onClick={() => reorder(events, originalIndex)}>Up</button>
-                          <button onClick={() => deleteItem(item._id)}>Delete</button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </div>
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.8rem" }}>
-          {activeTab === "gallery" ? (
-            <>
-              <button onClick={() => setGalleryPage((p) => Math.max(1, p - 1))} disabled={galleryPage === 1}>
-                Prev
-              </button>
-              <span className="muted">
-                Page {galleryPage} / {totalGalleryPages}
-              </span>
-              <button
-                onClick={() => setGalleryPage((p) => Math.min(totalGalleryPages, p + 1))}
-                disabled={galleryPage >= totalGalleryPages}
-              >
-                Next
-              </button>
-            </>
-          ) : (
-            <>
-              <button onClick={() => setEventsPage((p) => Math.max(1, p - 1))} disabled={eventsPage === 1}>
-                Prev
-              </button>
-              <span className="muted">
-                Page {eventsPage} / {totalEventsPages}
-              </span>
-              <button
-                onClick={() => setEventsPage((p) => Math.min(totalEventsPages, p + 1))}
-                disabled={eventsPage >= totalEventsPages}
-              >
-                Next
-              </button>
-            </>
-          )}
-        </div>
-      </section>
+                        </td>
+                        <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9" }}>{item.title}</td>
+                        <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9" }}>{item.month}</td>
+                        <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9", maxWidth: 260 }}>
+                          <span className="muted">{item.description}</span>
+                        </td>
+                        <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9" }}>
+                          <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                            <button type="button" onClick={() => onEditMagazine(item)}>
+                              Edit
+                            </button>
+                            <button type="button" onClick={() => reorder(magazines, originalIndex)}>
+                              Up
+                            </button>
+                            <button type="button" onClick={() => deleteItem(item._id)}>
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            ) : null}
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.8rem" }}>
+            {activeTab === "gallery" ? (
+              <>
+                <button type="button" onClick={() => setGalleryPage((p) => Math.max(1, p - 1))} disabled={galleryPage === 1}>
+                  Prev
+                </button>
+                <span className="muted">
+                  Page {galleryPage} / {totalGalleryPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setGalleryPage((p) => Math.min(totalGalleryPages, p + 1))}
+                  disabled={galleryPage >= totalGalleryPages}
+                >
+                  Next
+                </button>
+              </>
+            ) : null}
+            {activeTab === "events" ? (
+              <>
+                <button type="button" onClick={() => setEventsPage((p) => Math.max(1, p - 1))} disabled={eventsPage === 1}>
+                  Prev
+                </button>
+                <span className="muted">
+                  Page {eventsPage} / {totalEventsPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setEventsPage((p) => Math.min(totalEventsPages, p + 1))}
+                  disabled={eventsPage >= totalEventsPages}
+                >
+                  Next
+                </button>
+              </>
+            ) : null}
+            {activeTab === "sermons" ? (
+              <>
+                <button type="button" onClick={() => setSermonsPage((p) => Math.max(1, p - 1))} disabled={sermonsPage === 1}>
+                  Prev
+                </button>
+                <span className="muted">
+                  Page {sermonsPage} / {totalSermonsPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSermonsPage((p) => Math.min(totalSermonsPages, p + 1))}
+                  disabled={sermonsPage >= totalSermonsPages}
+                >
+                  Next
+                </button>
+              </>
+            ) : null}
+            {activeTab === "magazines" ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setMagazinesPage((p) => Math.max(1, p - 1))}
+                  disabled={magazinesPage === 1}
+                >
+                  Prev
+                </button>
+                <span className="muted">
+                  Page {magazinesPage} / {totalMagazinesPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setMagazinesPage((p) => Math.min(totalMagazinesPages, p + 1))}
+                  disabled={magazinesPage >= totalMagazinesPages}
+                >
+                  Next
+                </button>
+              </>
+            ) : null}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

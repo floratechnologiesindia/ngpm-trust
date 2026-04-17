@@ -44,7 +44,7 @@ export default function AdminLoginPage() {
     <div className="section grid">
       <section className="card" style={{ maxWidth: 480, margin: "0 auto", width: "100%" }}>
         <h1>Admin Login</h1>
-        <p className="muted">Login with admin credentials to manage gallery and events.</p>
+        <p className="muted">Login with admin credentials to manage gallery, events, sermons, and magazines.</p>
         <form onSubmit={onSubmit} className="grid" style={{ gap: "0.75rem" }}>
           <input
             value={username}

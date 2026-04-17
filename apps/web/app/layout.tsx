@@ -41,7 +41,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </div>
             </Link>
             <Link href="/" className="nav-brand-title">
-              NGPM Trust
+              <span className="nav-brand-line">
+                Nehemiah New Generation Partakers Movement Trust, NGPM
+              </span>
+              <span className="nav-brand-line nav-brand-line-secondary">
+                Salvation Mission Partaker Movement SMPM
+              </span>
             </Link>
 
             <details className="mobile-menu">
@@ -51,6 +56,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Link href="/about">About</Link>
                 <Link href="/office-bearers">Office Bearers</Link>
                 <Link href="/events">Events</Link>
+                <Link href="/sermons">Sermons</Link>
+                <Link href="/magazines">Magazines</Link>
                 <Link href="/gallery">Gallery</Link>
                 <Link href="/contact">Contact</Link>
               </div>
@@ -61,6 +68,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/about">About</Link>
               <Link href="/office-bearers">Office Bearers</Link>
               <Link href="/events">Events</Link>
+              <Link href="/sermons">Sermons</Link>
+              <Link href="/magazines">Magazines</Link>
               <Link href="/gallery">Gallery</Link>
               <Link href="/contact">Contact</Link>
             </div>

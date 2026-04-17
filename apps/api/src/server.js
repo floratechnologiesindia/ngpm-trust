@@ -9,6 +9,8 @@ import authRoutes from "./routes/auth.js";
 import uploadRoutes from "./routes/upload.js";
 import galleryRoutes from "./routes/gallery.js";
 import eventRoutes from "./routes/events.js";
+import sermonRoutes from "./routes/sermons.js";
+import magazineRoutes from "./routes/magazines.js";
 
 dotenv.config();
 
@@ -40,6 +42,8 @@ app.get("/api/health", (req, res) => res.json({ ok: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/gallery", galleryRoutes);
 app.use("/api/events", eventRoutes);
+app.use("/api/sermons", sermonRoutes);
+app.use("/api/magazines", magazineRoutes);
 app.use("/api/upload", uploadRoutes);
 
 connectDb(mongoUri)

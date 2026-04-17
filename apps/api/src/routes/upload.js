@@ -8,6 +8,10 @@ import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+const uploadPdf = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 25 * 1024 * 1024 }
+});
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -23,6 +27,26 @@ router.post("/", requireAuth, upload.single("image"), async (req, res) => {
   await sharp(req.file.buffer).resize({ width: 1920, withoutEnlargement: true }).webp({ quality: 82 }).toFile(outputPath);
 
   res.status(201).json({ imageUrl: `/uploads/${fileName}` });
+});
+
+router.post("/pdf", requireAuth, uploadPdf.single("pdf"), async (req, res) => {
+  if (!req.file) return res.status(400).json({ message: "No PDF uploaded" });
+  if (req.file.mimetype !== "application/pdf") {
+    return res.status(400).json({ message: "Only PDF files are allowed" });
+  }
+
+  const safeBase =
+    req.file.originalname
+      .replace(/\s+/g, "-")
+      .replace(/[^a-zA-Z0-9._-]/g, "")
+      .replace(/\.pdf$/i, "") || "document";
+  const fileName = `${Date.now()}-${safeBase}.pdf`;
+  const outputDir = path.resolve(__dirname, "../../uploads");
+  const outputPath = path.join(outputDir, fileName);
+  await fs.mkdir(outputDir, { recursive: true });
+  await fs.writeFile(outputPath, req.file.buffer);
+
+  res.status(201).json({ pdfUrl: `/uploads/${fileName}` });
 });
 
 export default router;
