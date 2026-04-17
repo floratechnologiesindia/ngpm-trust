@@ -11,6 +11,7 @@ import galleryRoutes from "./routes/gallery.js";
 import eventRoutes from "./routes/events.js";
 import sermonRoutes from "./routes/sermons.js";
 import magazineRoutes from "./routes/magazines.js";
+import announcementRoutes from "./routes/announcements.js";
 
 dotenv.config();
 
@@ -44,6 +45,7 @@ app.use("/api/gallery", galleryRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/sermons", sermonRoutes);
 app.use("/api/magazines", magazineRoutes);
+app.use("/api/announcements", announcementRoutes);
 app.use("/api/upload", uploadRoutes);
 
 connectDb(mongoUri)

@@ -8,7 +8,7 @@ import { youtubeEmbedSrc } from "../../lib/youtube";
 type Area = { x: number; y: number; width: number; height: number };
 type Point = { x: number; y: number };
 
-type Tab = "gallery" | "events" | "sermons" | "magazines";
+type Tab = "gallery" | "events" | "sermons" | "magazines" | "announcements";
 
 type GalleryItem = { _id: string; title: string; imageUrl: string; order: number };
 type EventItem = {
@@ -28,6 +28,13 @@ type MagazineItem = {
   month: string;
   thumbnailUrl: string;
   pdfUrl: string;
+  order: number;
+};
+type AnnouncementItem = {
+  _id: string;
+  title: string;
+  description: string;
+  pinned: boolean;
   order: number;
 };
 
@@ -60,6 +67,7 @@ export default function AdminPage() {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [sermons, setSermons] = useState<SermonItem[]>([]);
   const [magazines, setMagazines] = useState<MagazineItem[]>([]);
+  const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [title, setTitle] = useState("");
@@ -67,6 +75,7 @@ export default function AdminPage() {
   const [eventDate, setEventDate] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [magazineMonth, setMagazineMonth] = useState("");
+  const [announcementPinned, setAnnouncementPinned] = useState(false);
   const [pdfUrl, setPdfUrl] = useState("");
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -81,6 +90,7 @@ export default function AdminPage() {
   const [eventsPage, setEventsPage] = useState(1);
   const [sermonsPage, setSermonsPage] = useState(1);
   const [magazinesPage, setMagazinesPage] = useState(1);
+  const [announcementsPage, setAnnouncementsPage] = useState(1);
   const pageSize = 5;
 
   const previewUrl = useMemo(() => (imageFile ? URL.createObjectURL(imageFile) : ""), [imageFile]);
@@ -88,10 +98,15 @@ export default function AdminPage() {
   const totalEventsPages = Math.max(1, Math.ceil(events.length / pageSize));
   const totalSermonsPages = Math.max(1, Math.ceil(sermons.length / pageSize));
   const totalMagazinesPages = Math.max(1, Math.ceil(magazines.length / pageSize));
+  const totalAnnouncementsPages = Math.max(1, Math.ceil(announcements.length / pageSize));
   const pagedGallery = gallery.slice((galleryPage - 1) * pageSize, galleryPage * pageSize);
   const pagedEvents = events.slice((eventsPage - 1) * pageSize, eventsPage * pageSize);
   const pagedSermons = sermons.slice((sermonsPage - 1) * pageSize, sermonsPage * pageSize);
   const pagedMagazines = magazines.slice((magazinesPage - 1) * pageSize, magazinesPage * pageSize);
+  const pagedAnnouncements = announcements.slice(
+    (announcementsPage - 1) * pageSize,
+    announcementsPage * pageSize
+  );
 
   const showImageTools = activeTab === "gallery" || activeTab === "events" || activeTab === "magazines";
 
@@ -128,6 +143,10 @@ export default function AdminPage() {
     if (magazinesPage > totalMagazinesPages) setMagazinesPage(totalMagazinesPages);
   }, [magazinesPage, totalMagazinesPages]);
 
+  useEffect(() => {
+    if (announcementsPage > totalAnnouncementsPages) setAnnouncementsPage(totalAnnouncementsPages);
+  }, [announcementsPage, totalAnnouncementsPages]);
+
   const authHeaders = (t = token) => ({
     Authorization: `Bearer ${t}`
   });
@@ -135,22 +154,25 @@ export default function AdminPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [galleryRes, eventRes, sermonRes, magRes] = await Promise.all([
+      const [galleryRes, eventRes, sermonRes, magRes, announcementRes] = await Promise.all([
         fetch(`${apiBase}/api/gallery`, { cache: "no-store" }),
         fetch(`${apiBase}/api/events`, { cache: "no-store" }),
         fetch(`${apiBase}/api/sermons`, { cache: "no-store" }),
-        fetch(`${apiBase}/api/magazines`, { cache: "no-store" })
+        fetch(`${apiBase}/api/magazines`, { cache: "no-store" }),
+        fetch(`${apiBase}/api/announcements`, { cache: "no-store" })
       ]);
-      const [galleryData, eventData, sermonData, magData] = await Promise.all([
+      const [galleryData, eventData, sermonData, magData, announcementData] = await Promise.all([
         galleryRes.json(),
         eventRes.json(),
         sermonRes.json(),
-        magRes.json()
+        magRes.json(),
+        announcementRes.json()
       ]);
       setGallery(Array.isArray(galleryData) ? galleryData : []);
       setEvents(Array.isArray(eventData) ? eventData : []);
       setSermons(Array.isArray(sermonData) ? sermonData : []);
       setMagazines(Array.isArray(magData) ? magData : []);
+      setAnnouncements(Array.isArray(announcementData) ? announcementData : []);
     } finally {
       setLoading(false);
     }
@@ -224,6 +246,7 @@ export default function AdminPage() {
     setEventDate("");
     setYoutubeUrl("");
     setMagazineMonth("");
+    setAnnouncementPinned(false);
     setPdfUrl("");
     setPdfFile(null);
     setEditingId(null);
@@ -276,7 +299,7 @@ export default function AdminPage() {
           headers: { "Content-Type": "application/json", ...authHeaders() },
           body: JSON.stringify(payload)
         });
-      } else {
+      } else if (activeTab === "magazines") {
         if (!magazineMonth.trim()) {
           window.alert("Month is required.");
           return;
@@ -301,6 +324,17 @@ export default function AdminPage() {
           headers: { "Content-Type": "application/json", ...authHeaders() },
           body: JSON.stringify(payload)
         });
+      } else {
+        const payload = { title, description, pinned: announcementPinned };
+        const url = editingId
+          ? `${apiBase}/api/announcements/${editingId}`
+          : `${apiBase}/api/announcements`;
+        const method = editingId ? "PUT" : "POST";
+        await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json", ...authHeaders() },
+          body: JSON.stringify(payload)
+        });
       }
       resetForm();
       await loadData();
@@ -313,7 +347,8 @@ export default function AdminPage() {
     if (tab === "gallery") return "gallery";
     if (tab === "events") return "events";
     if (tab === "sermons") return "sermons";
-    return "magazines";
+    if (tab === "magazines") return "magazines";
+    return "announcements";
   };
 
   const deleteItem = async (id: string) => {
@@ -373,6 +408,14 @@ export default function AdminPage() {
     setPdfFile(null);
   };
 
+  const onEditAnnouncement = (item: AnnouncementItem) => {
+    setActiveTab("announcements");
+    setEditingId(item._id);
+    setTitle(item.title);
+    setDescription(item.description);
+    setAnnouncementPinned(item.pinned);
+  };
+
   const logout = () => {
     localStorage.removeItem("admin_token");
     router.push("/admin/login");
@@ -385,7 +428,9 @@ export default function AdminPage() {
         ? "Event"
         : activeTab === "sermons"
           ? "Sermon"
-          : "Magazine";
+          : activeTab === "magazines"
+            ? "Magazine"
+            : "Announcement";
 
   const sermonPreview = youtubeEmbedSrc(youtubeUrl);
 
@@ -407,6 +452,13 @@ export default function AdminPage() {
         </button>
         <button
           type="button"
+          style={tabBtn(activeTab === "announcements")}
+          onClick={() => setActiveTab("announcements")}
+        >
+          Announcements
+        </button>
+        <button
+          type="button"
           className="btn secondary"
           onClick={logout}
           style={{ border: 0, marginTop: "0.5rem" }}
@@ -419,8 +471,8 @@ export default function AdminPage() {
         <section className="card">
           <h1 style={{ marginTop: 0 }}>Admin Panel</h1>
           <p className="muted">
-            Manage gallery, events, sermons (YouTube), and magazines (PDF + cover). Images support
-            crop and optimization; PDFs up to 25&nbsp;MB.
+            Manage gallery, events, sermons (YouTube), magazines (PDF + cover), and announcements.
+            Images support crop and optimization; PDFs up to 25&nbsp;MB.
           </p>
         </section>
 
@@ -443,6 +495,25 @@ export default function AdminPage() {
               rows={4}
               style={{ marginTop: "0.75rem", width: "100%" }}
             />
+          ) : null}
+          {activeTab === "announcements" ? (
+            <>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Announcement details (optional)"
+                rows={3}
+                style={{ marginTop: "0.75rem", width: "100%" }}
+              />
+              <label style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", marginTop: "0.75rem" }}>
+                <input
+                  type="checkbox"
+                  checked={announcementPinned}
+                  onChange={(e) => setAnnouncementPinned(e.target.checked)}
+                />
+                Pin this announcement
+              </label>
+            </>
           ) : null}
           {activeTab === "sermons" ? (
             <input
@@ -539,7 +610,9 @@ export default function AdminPage() {
                 ? "Events"
                 : activeTab === "sermons"
                   ? "Sermons"
-                  : "Magazines"}
+                : activeTab === "magazines"
+                  ? "Magazines"
+                  : "Announcements"}
           </h2>
           {loading ? <p className="muted">Loading...</p> : null}
           <div style={{ marginTop: "1rem", overflowX: "auto" }}>
@@ -734,6 +807,47 @@ export default function AdminPage() {
                 </tbody>
               </table>
             ) : null}
+            {activeTab === "announcements" ? (
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Title</th>
+                    <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Pinned</th>
+                    <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Description</th>
+                    <th style={{ textAlign: "left", padding: "0.6rem", borderBottom: "1px solid #e2e8f0" }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pagedAnnouncements.map((item) => {
+                    const originalIndex = announcements.findIndex((a) => a._id === item._id);
+                    return (
+                      <tr key={item._id}>
+                        <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9" }}>{item.title}</td>
+                        <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9" }}>
+                          {item.pinned ? "Yes" : "No"}
+                        </td>
+                        <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9", maxWidth: 280 }}>
+                          <span className="muted">{item.description}</span>
+                        </td>
+                        <td style={{ padding: "0.6rem", borderBottom: "1px solid #f1f5f9" }}>
+                          <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                            <button type="button" onClick={() => onEditAnnouncement(item)}>
+                              Edit
+                            </button>
+                            <button type="button" onClick={() => reorder(announcements, originalIndex)}>
+                              Up
+                            </button>
+                            <button type="button" onClick={() => deleteItem(item._id)}>
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            ) : null}
           </div>
 
           <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.8rem" }}>
@@ -804,6 +918,27 @@ export default function AdminPage() {
                   type="button"
                   onClick={() => setMagazinesPage((p) => Math.min(totalMagazinesPages, p + 1))}
                   disabled={magazinesPage >= totalMagazinesPages}
+                >
+                  Next
+                </button>
+              </>
+            ) : null}
+            {activeTab === "announcements" ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setAnnouncementsPage((p) => Math.max(1, p - 1))}
+                  disabled={announcementsPage === 1}
+                >
+                  Prev
+                </button>
+                <span className="muted">
+                  Page {announcementsPage} / {totalAnnouncementsPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setAnnouncementsPage((p) => Math.min(totalAnnouncementsPages, p + 1))}
+                  disabled={announcementsPage >= totalAnnouncementsPages}
                 >
                   Next
                 </button>

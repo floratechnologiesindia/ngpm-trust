@@ -10,6 +10,12 @@ type EventItem = {
   imageUrls: string[];
   imageUrl?: string;
 };
+type AnnouncementItem = {
+  _id: string;
+  title: string;
+  description: string;
+  pinned: boolean;
+};
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:6661";
 const resolveImageUrl = (url?: string) => {
@@ -20,21 +26,59 @@ const resolveImageUrl = (url?: string) => {
 
 export default function EventsPage() {
   const [events, setEvents] = useState<EventItem[]>([]);
+  const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
 
   useEffect(() => {
-    fetch(`${apiBase}/api/events`)
-      .then((r) => r.json())
-      .then((data) => setEvents(Array.isArray(data) ? data : []))
-      .catch(() => setEvents([]));
+    Promise.all([
+      fetch(`${apiBase}/api/events`).then((r) => r.json()),
+      fetch(`${apiBase}/api/announcements`).then((r) => r.json())
+    ])
+      .then(([eventData, announcementData]) => {
+        setEvents(Array.isArray(eventData) ? eventData : []);
+        setAnnouncements(Array.isArray(announcementData) ? announcementData : []);
+      })
+      .catch(() => {
+        setEvents([]);
+        setAnnouncements([]);
+      });
   }, []);
 
   return (
     <div className="section grid">
       <section className="hero">
-        <h1>Events</h1>
+        <h1>Events & Announcements</h1>
         <p style={{ maxWidth: 760 }}>
-          Mission gatherings, outreach meetings, and community transformation milestones.
+          Mission gatherings, prayer alerts, outreach meetings, and community transformation
+          milestones.
         </p>
+      </section>
+      <section className="card" style={{ borderColor: "#99f6e4", background: "#f0fdfa" }}>
+        <h2 style={{ marginTop: 0 }}>Announcements</h2>
+        <div className="grid" style={{ gap: "0.6rem" }}>
+          {announcements.map((announcement) => (
+            <article
+              key={announcement._id}
+              style={{
+                border: "1px solid #cbd5e1",
+                borderRadius: 12,
+                padding: "0.8rem 0.9rem",
+                background: announcement.pinned ? "#d1fae5" : "#ffffff"
+              }}
+            >
+              <p style={{ margin: 0, fontWeight: 700 }}>{announcement.title}</p>
+              {announcement.description ? (
+                <p className="muted" style={{ margin: "0.35rem 0 0" }}>
+                  {announcement.description}
+                </p>
+              ) : null}
+            </article>
+          ))}
+          {announcements.length === 0 ? (
+            <p className="muted" style={{ margin: 0 }}>
+              No announcements yet.
+            </p>
+          ) : null}
+        </div>
       </section>
       <section className="grid grid-3">
         {events.map((event) => (

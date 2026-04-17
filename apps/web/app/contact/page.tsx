@@ -21,9 +21,9 @@ export default function ContactPage() {
         </article>
         <article className="card">
           <h3>Bank Details</h3>
-          <p>NGPM - SBI Account: 42178020691</p>
+          <p>Nehemiah New Generation Partakers Movement Trust - SBI Account: 42178020691</p>
           <p>IFSC: SBIN0061767 (Tiruanchery)</p>
-          <p>SMPM - Canara Account: 120034549490</p>
+          <p>Salvation Mission Partaker Movement - Canara Account: 120034549490</p>
           <p>IFSC: CNR0005652 (Chennai Salayur)</p>
         </article>
       </section>
@@ -80,9 +80,14 @@ export default function ContactPage() {
       </section>
       <section className="cta-band">
         <h2 style={{ marginTop: 0 }}>Ways to partner with this mission</h2>
+        <p style={{ marginTop: 0, marginBottom: "0.75rem", fontWeight: 700 }}>(eligible for 80G exemption)</p>
         <p style={{ marginBottom: "0.5rem" }}>Sponsor a missionary: Rs. 3,000/month</p>
         <p style={{ marginBottom: "0.5rem" }}>Educate a missionary child: Rs. 1,000/month</p>
-        <p>Support a tribal child: Rs. 600-Rs. 1,200/month (eligible for 80G exemption)</p>
+        <p style={{ marginBottom: "0.5rem" }}>Support a tribal child: Rs. 600-Rs. 1,200/month</p>
+        <p style={{ marginBottom: "0.4rem", fontWeight: 700 }}>Church Construction:</p>
+        <p style={{ marginBottom: "0.5rem" }}>1000 sq. ft. - ₹8,00,000</p>
+        <p style={{ marginBottom: "0.5rem" }}>600 sq. ft. - ₹5,00,000</p>
+        <p style={{ marginBottom: 0 }}>Kacha Church - ₹3,00,000</p>
       </section>
     </div>
   );
