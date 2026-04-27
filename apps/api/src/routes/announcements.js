@@ -7,7 +7,8 @@ const router = Router();
 const defaultPinned = [
   "Online Prayer at 9 p.m. every Tuesday",
   "Women's Prayer at 5 p.m. every Saturday",
-  "Youth's Prayer at 8 p.m. every Saturday"
+  "Youth's Prayer at 8 p.m. every Saturday",
+  "Nambikkai TV - Sunday 6.00 p.m & midnight 12.00 a.m., Thursday 8.30 p.m., Saturday 7.45 p.m.  & midnight 12.00 a.m."
 ];
 
 let defaultsEnsured = false;

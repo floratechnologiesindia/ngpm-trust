@@ -5,10 +5,10 @@ import Link from "next/link";
 
 const highlights = [
   { value: "270", label: "Missionaries across India" },
-  { value: "880", label: "Village congregations" },
-  { value: "59", label: "Churches built and dedicated" },
+  { value: "895", label: "Village congregations" },
+  { value: "61", label: "Churches built and dedicated" },
   { value: "458", label: "Tribal children supported" },
-  { value: "28", label: "Day Care Centres" }
+  { value: "700", label: "Day Care and Tuition Centers" }
 ];
 
 export default function HomePage() {
@@ -135,11 +135,11 @@ export default function HomePage() {
       <section className="card mission-content-block">
         <h2 style={{ marginTop: 0 }}>மறுரூப இந்தியா</h2>
         <p>
-          <strong>SMPM & NGPM OUR ETHOS:</strong> Obedience to God&apos;s Word · Faith · Holiness ·
-          Sacrifice · Simple Living · Real Fellowship.
+          <strong>SMPM & NGPM கொள்கைகள்:</strong> வேதவசனத்திற்கு கீழ்படிதல் · விசுவாசம் · பரிசுத்தம் ·
+          தியாகம் · எளிய வாழ்க்கை · உள்ளான ஐக்கியம்
         </p>
 
-        <h3>VISION STATEMENT</h3>
+        <h3>தெளிவான தரிசனம்</h3>
         <p>
           தேவனால் எழுப்பபட்ட ஒரு சுதேச உள்நாட்டு மிஷனெரி இயக்கம் இயேசு தமது சீஷர்களை நோக்கி
           உலகமெங்கும் போய் சர்வ சிருஸ்டிக்கும் சுவிசேஷத்தைப் பிரசங்கியுங்கள். விசுவாசமுள்ளவனாகி
@@ -150,7 +150,7 @@ export default function HomePage() {
           வங்காளதேஷ் நாடுகளில் 22 விதமான ஜாதிகளுக்கு சுவிசேஷம் அறிவிக்கிறோம்.
         </p>
 
-        <h3>MISSION STATEMENT</h3>
+        <h3>செயல் திட்டம்</h3>
         <p>
           இயக்கம் ஆரம்பித்த கடந்த 7 ஆண்டுகளில் 8950 பேருக்கு திருமுழுக்கு கொடுத்து 880 கிராமங்களில்
           சபை உருவாக்கி 59 கிராமங்களில் ஆலயம் கட்டி பிரதிஷ்டை செய்து முதல் தலைமுறை கிறிஸ்தவர்களாக
@@ -171,7 +171,7 @@ export default function HomePage() {
               நிம்மதி இயேசு கிறிஸ்துவில் மட்டுமே உண்டு என்பதை நம் தாய் நாட்டு மக்களுக்கு அறிவிக்கிறோம்.
             </p>
 
-            <h3>SOCIAL ECONOMIC</h3>
+            <h3>சமூக நல திட்டம்</h3>
             <p>
               முதியோர் கல்வி, டெய்லரிங், கணனி பயிற்சி கொடுத்து சுய வருமானம் பெற உதவுகிறோம். உள்ளூர்
               தலைமையத்துவம் உருவாக சபைகளை நடத்த முறையான இறையியல் கல்வி கொடுக்கிறோம்.
@@ -182,28 +182,28 @@ export default function HomePage() {
               கல்வி வழங்குகிறோம்.
             </p>
 
-            <h3>TRIBAL & POOR CHILDREN&apos;S EDUCATION</h3>
+            <h3>பழங்குடி மற்றும் ஏழை குழந்தைகளுக்கான கல்வி</h3>
             <p>
               மஹராஷ்டிரா–மத்திய பிரதேச எல்லையில் Powra ஆதிவாசி குழந்தைகளின் கல்வி முன்னேற்றத்திற்காக
               நந்தூர்பார் பகுதியில் 15x10 ஹால் கட்ட ரூ.1,00,000 தேவை. ஸ்பான்சர் குடும்ப பெயர் அந்த
               ஹாலில் பதிக்கப்பட்டு தினமும் ஜெபம் ஏறெடுக்கப்படும்.
             </p>
 
-            <h3>VISION-2030</h3>
+            <h3>தரிசனம் 2030</h3>
             <p>
               2030-க்குள் மிஷன் இந்தியா திட்டத்தின் மூலம் 100 பயிற்சி வளாகம் உருவாக்கி, அதன் மூலம்
               100 சுதேச மிஷனெரிகளை உருவாக்கி, ஒரு உள்ளூர் மிஷனெரி 10 சபைகளை எழுப்பி, 5 கிராமத்திற்கு
               ஒரு சுதேச மிஷனெரி என நியமிக்க விசுவாசத்துடன் உழைக்கிறோம்.
             </p>
 
-            <h3>MAGAZINE</h3>
+            <h3>மாதந்தோறும் பத்திரிகை</h3>
             <p>
               மாதம் தோறும் ஆத்தும சவால் என்ற பத்ரிகை வெளியிட்டு கர்த்தராகிய இயேசு தாம் சொன்னபடி
               சீக்கிரமாக வரப்போகிறார்; அவரை சந்திக்கும்போது வெறுங்கையுடன் செல்லக்கூடாது என்பதை
               அறிவுறுத்துகிறோம்.
             </p>
 
-            <h3>Church Construction</h3>
+            <h3>பணித்தள ஆலயக் கட்டுமானம்</h3>
             <p>
               MAHARASTRA, RAJASTHAN, GUJARAT, WEST BENGAL, ODISHA, ANDHRA PRADESH, TAMIL NADU,
               KARNATAKA, CHATTISGHAR, UDHRA PRADESH, UDHRAKANT, NEPAL, PUNJAB, HIMACHEL, JAMMU &
@@ -212,7 +212,7 @@ export default function HomePage() {
               தேவை. 80G Exception Available.
             </p>
 
-            <h3>WHAT IS YOUR INVOLVEMENT?</h3>
+            <h3>உங்கள் பங்களிப்புகள்</h3>
             <p>
               ஒரு மிஷனெரியை ஜெபித்து அனுப்ப மாதம் 3000, ஒரு மிஷனெரி குழந்தை படிக்க வைக்க மாதம் 1000,
               ஒரு ஆதிவாசி குழந்தை படிக்க வைக்க மாதம் 600/1200. உங்கள் சிறப்பு நன்கொடைக்கு 80G
@@ -222,7 +222,7 @@ export default function HomePage() {
               முகவரி: 2 MGR தெரு, பதுவஞ்சேரி, சென்னை-600126 / 9444737550
             </p>
 
-            <h3>BANK DETAILS</h3>
+            <h3>வங்கி விவரம்</h3>
             <p>
               Nehemiah New Generation Partakers Movement (NGPM), SBI Ac. 42178020691, IFSC:
               SBIN0061767, Tiruanchery Branch.

@@ -21,7 +21,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div>
               <h3 style={{ color: "#f8fafc" }}>NGPM & SMPM Headquarters</h3>
               <p className="muted" style={{ color: "#cbd5e1" }}>
-                2, MGR Street, Padhuvancheri, Chennai - 600126 | +91 9444737550 / 8056827550
+                2, MGR Street, Padhuvancheri, Chennai - 600126 | +91 9444737550 / 8056827550 /
+                9043867550
               </p>
               <p className="muted" style={{ color: "#cbd5e1" }}>
                 Email: office@smpm.co.in | koilraj@smpm.co.in
@@ -37,6 +38,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </p>
               <p style={{ color: "#f8fafc", fontWeight: 700 }}>
                 Pray, plan, and participate in Mission India.
+              </p>
+              <p className="muted" style={{ color: "#cbd5e1", marginTop: 0 }}>
+                For abroad sponsers and 80G exception, please contact the General Secretary at
+                904386550
               </p>
             </div>
           </section>

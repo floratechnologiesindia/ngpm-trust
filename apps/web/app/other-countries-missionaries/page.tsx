@@ -143,7 +143,7 @@ export default function OtherCountriesMissionariesPage() {
   return (
     <div className="section grid" style={{ gap: "1rem" }}>
       <section className="hero">
-        <h1>Other Countries Missionaries</h1>
+        <h1>Neighbour Countries Visions</h1>
         <p style={{ maxWidth: 840 }}>
           Extending ministry into Nepal, Bhutan, Bangladesh, and other nations, 22 Missionaries
           working along with 25 ethnic groups.
