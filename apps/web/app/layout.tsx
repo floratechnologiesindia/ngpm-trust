@@ -41,7 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </p>
               <p className="muted" style={{ color: "#cbd5e1", marginTop: 0 }}>
                 For abroad sponsers and 80G exception, please contact the General Secretary at
-                904386550
+                9043867550
               </p>
             </div>
           </section>
